@@ -13,39 +13,19 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+  Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
-  Copy,
-  Trash2,
-  Save,
-  ChevronDown,
-  Plus,
-  Loader2,
-  Send,
-  Eraser,
-  ChevronRight,
-  ChevronLeft,
-  MessageSquare,
-  Code2,
-  Sparkles,
-  Zap,
+  Copy, Trash2, Save, ChevronDown, Plus, Loader2,
+  Send, Eraser, ChevronRight, ChevronLeft, Sparkles, Zap,
+  Code2, Bot,
 } from "lucide-react";
 
 const LANGUAGES = [
@@ -73,49 +53,37 @@ const LANGUAGES = [
 
 const AI_ACTIONS = [
   { label: "Generate", prompt: "Generate code for: " },
-  { label: "Explain", prompt: "Explain what this code does: " },
-  { label: "Debug", prompt: "Find and fix bugs in this code: " },
-  { label: "Refactor", prompt: "Refactor this code to be cleaner: " },
+  { label: "Explain", prompt: "Explain what this code does in detail: " },
+  { label: "Debug", prompt: "Find and fix all bugs in this code: " },
+  { label: "Refactor", prompt: "Refactor this code to be cleaner and more efficient: " },
   { label: "Add Comments", prompt: "Add comprehensive comments to this code: " },
-  { label: "Write Tests", prompt: "Write unit tests for this code: " },
-  { label: "Translate", prompt: "Translate this code to another language: " },
-  { label: "Optimize", prompt: "Optimize this code for performance: " },
+  { label: "Write Tests", prompt: "Write thorough unit tests for this code: " },
+  { label: "Translate", prompt: "Translate this code to another language (specify which): " },
+  { label: "Optimize", prompt: "Optimize this code for maximum performance: " },
 ];
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  id: string;
-}
+interface Message { role: "user" | "assistant"; content: string; id: string; }
 
 function CodeBlock({ code, language }: { code: string; language?: string }) {
   const { toast } = useToast();
   return (
-    <div className="my-3 rounded-lg overflow-hidden chat-code-block">
+    <div className="nexus-code-block">
       <div
         className="flex items-center justify-between px-3 py-1.5"
-        style={{
-          background: "rgba(6,182,212,0.08)",
-          borderBottom: "1px solid rgba(6,182,212,0.15)",
-        }}
+        style={{ borderBottom: "1px solid rgba(124,58,237,0.15)", background: "rgba(124,58,237,0.06)" }}
       >
-        <span className="text-[10px] font-mono" style={{ color: "rgba(6,182,212,0.7)" }}>
-          {language ?? "code"}
-        </span>
+        <span className="text-[10px] font-mono" style={{ color: "rgba(167,139,250,0.7)" }}>{language ?? "code"}</span>
         <button
-          onClick={() => {
-            navigator.clipboard.writeText(code);
-            toast({ title: "Copied to clipboard" });
-          }}
-          className="text-[10px] flex items-center gap-1 transition-colors"
-          style={{ color: "rgba(6,182,212,0.6)" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#06b6d4")}
-          onMouseLeave={e => (e.currentTarget.style.color = "rgba(6,182,212,0.6)")}
+          onClick={() => { navigator.clipboard.writeText(code); toast({ title: "Copied!" }); }}
+          className="flex items-center gap-1 text-[10px] transition-colors"
+          style={{ color: "rgba(167,139,250,0.6)" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "#a78bfa")}
+          onMouseLeave={e => (e.currentTarget.style.color = "rgba(167,139,250,0.6)")}
         >
           <Copy className="w-3 h-3" /> Copy
         </button>
       </div>
-      <pre className="overflow-x-auto p-4 text-sm font-mono leading-relaxed text-[#a8b8d0] bg-transparent">
+      <pre className="p-4 text-[12.5px] leading-relaxed overflow-x-auto m-0" style={{ color: "#b8c8e8", fontFamily: "'JetBrains Mono', monospace" }}>
         <code>{code}</code>
       </pre>
     </div>
@@ -125,37 +93,30 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 function MessageContent({ content }: { content: string }) {
   const parts: Array<{ type: "text" | "code"; content: string; language?: string }> = [];
   const regex = /```(\w*)\n?([\s\S]*?)```/g;
-  let lastIndex = 0;
-  let match;
+  let lastIndex = 0, match;
   while ((match = regex.exec(content)) !== null) {
     if (match.index > lastIndex) parts.push({ type: "text", content: content.slice(lastIndex, match.index) });
     parts.push({ type: "code", content: match[2].trim(), language: match[1] || undefined });
     lastIndex = match.index + match[0].length;
   }
   if (lastIndex < content.length) parts.push({ type: "text", content: content.slice(lastIndex) });
-
   return (
     <div>
-      {parts.map((part, i) =>
-        part.type === "code" ? (
-          <CodeBlock key={i} code={part.content} language={part.language} />
-        ) : (
-          <p key={i} className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "#a8b8d0" }}>
-            {part.content}
-          </p>
-        )
+      {parts.map((p, i) =>
+        p.type === "code"
+          ? <CodeBlock key={i} code={p.content} language={p.language} />
+          : <p key={i} className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "#b0a0d8" }}>{p.content}</p>
       )}
     </div>
   );
 }
 
-const PANEL_BORDER = "1px solid rgba(6,182,212,0.12)";
-const TOOLBAR_BG = "rgba(4,9,20,0.9)";
+const TOPBAR = "rgba(4,0,12,0.9)";
+const DIVIDER = "1px solid rgba(124,58,237,0.15)";
 
 export default function EditorPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
   const [language, setLanguage] = useState("javascript");
   const [code, setCode] = useState("// Start coding here...\n");
   const [chatInput, setChatInput] = useState("");
@@ -163,7 +124,7 @@ export default function EditorPage() {
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
-  const [editorWidth, setEditorWidth] = useState(60);
+  const [editorWidth, setEditorWidth] = useState(58);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -173,9 +134,7 @@ export default function EditorPage() {
   const deleteConversation = useDeleteOpenaiConversation();
   const createSnippet = useCreateSnippet();
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const startNewConversation = useCallback(async () => {
     const conv = await createConversation.mutateAsync({ data: { title: "New Chat" } });
@@ -184,21 +143,16 @@ export default function EditorPage() {
     queryClient.invalidateQueries({ queryKey: getListOpenaiConversationsQueryKey() });
   }, [createConversation, queryClient]);
 
-  useEffect(() => {
-    if (!conversationId) startNewConversation();
-  }, []);
+  useEffect(() => { if (!conversationId) startNewConversation(); }, []);
 
   const sendMessage = useCallback(async (userMessage: string) => {
     if (!conversationId || !userMessage.trim() || isStreaming) return;
-
     const userMsg: Message = { role: "user", content: userMessage, id: Date.now().toString() };
     setMessages(prev => [...prev, userMsg]);
     setChatInput("");
     setIsStreaming(true);
-
-    const assistantMsgId = (Date.now() + 1).toString();
-    setMessages(prev => [...prev, { role: "assistant", content: "", id: assistantMsgId }]);
-
+    const aId = (Date.now() + 1).toString();
+    setMessages(prev => [...prev, { role: "assistant", content: "", id: aId }]);
     try {
       const response = await fetch(`/api/openai/conversations/${conversationId}/messages`, {
         method: "POST",
@@ -207,13 +161,10 @@ export default function EditorPage() {
           content: `The user has the following ${language} code:\n\`\`\`${language}\n${code}\n\`\`\`\n\nUser request: ${userMessage}`,
         }),
       });
-
-      if (!response.ok || !response.body) throw new Error("Failed to connect");
-
+      if (!response.ok || !response.body) throw new Error("Failed");
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -225,98 +176,64 @@ export default function EditorPage() {
             try {
               const parsed = JSON.parse(line.slice(6));
               if (parsed.done) break;
-              if (parsed.content) {
-                setMessages(prev =>
-                  prev.map(m => m.id === assistantMsgId ? { ...m, content: m.content + parsed.content } : m)
-                );
-              }
+              if (parsed.content) setMessages(prev => prev.map(m => m.id === aId ? { ...m, content: m.content + parsed.content } : m));
             } catch {}
           }
         }
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {
-        toast({ title: "AI error", description: "Failed to get a response.", variant: "destructive" });
-        setMessages(prev => prev.filter(m => m.id !== assistantMsgId));
+        toast({ title: "AI error", variant: "destructive" });
+        setMessages(prev => prev.filter(m => m.id !== aId));
       }
-    } finally {
-      setIsStreaming(false);
-    }
+    } finally { setIsStreaming(false); }
   }, [conversationId, code, language, isStreaming, toast]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage(chatInput);
-    }
-  };
-
-  const handleSaveSnippet = async () => {
-    await createSnippet.mutateAsync({ data: { title: `Snippet ${new Date().toLocaleString()}`, code, language } });
-    queryClient.invalidateQueries({ queryKey: getListSnippetsQueryKey() });
-    toast({ title: "Saved to snippets" });
-  };
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(code);
-    toast({ title: "Copied to clipboard" });
-  };
-
-  const handleDeleteConversation = async (id: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    await deleteConversation.mutateAsync({ id });
-    queryClient.invalidateQueries({ queryKey: getListOpenaiConversationsQueryKey() });
-    if (conversationId === id) startNewConversation();
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(chatInput); }
   };
 
   return (
     <div className="flex h-full overflow-hidden">
-      {/* ── EDITOR PANEL ── */}
-      <div
-        className="flex flex-col overflow-hidden"
-        style={{ width: chatOpen ? `${editorWidth}%` : "100%", borderRight: PANEL_BORDER }}
-      >
+      {/* ── EDITOR SIDE ── */}
+      <div className="flex flex-col overflow-hidden" style={{ width: chatOpen ? `${editorWidth}%` : "100%", borderRight: DIVIDER }}>
         {/* Toolbar */}
         <div
-          className="flex items-center gap-2 px-3 py-2 shrink-0"
-          style={{ background: TOOLBAR_BG, borderBottom: PANEL_BORDER }}
+          className="flex items-center gap-2 px-4 py-2 shrink-0"
+          style={{ background: TOPBAR, borderBottom: DIVIDER, minHeight: "46px" }}
         >
-          <div className="flex items-center gap-1.5">
-            <Code2 className="w-4 h-4" style={{ color: "#06b6d4" }} />
-            <span className="text-sm font-semibold" style={{ color: "#e0eaf5", fontFamily: "var(--app-font-sans)" }}>
-              Editor
-            </span>
-          </div>
+          <Code2 className="w-4 h-4 shrink-0" style={{ color: "#7c3aed" }} />
+          <span className="text-sm font-bold mr-1" style={{ color: "#d4c8ff" }}>Editor</span>
 
-          {/* Language selector */}
           <Select value={language} onValueChange={setLanguage}>
             <SelectTrigger
               data-testid="select-language"
-              className="w-36 h-7 text-xs border-[rgba(6,182,212,0.2)] bg-[rgba(6,182,212,0.05)] text-[#a8b8d0] hover:border-[rgba(6,182,212,0.4)] focus:ring-0"
+              className="w-38 h-7 text-xs"
+              style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)", color: "#c4b5fd" }}
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {LANGUAGES.map(lang => (
-                <SelectItem key={lang.value} value={lang.value} className="text-xs">{lang.label}</SelectItem>
-              ))}
+              {LANGUAGES.map(l => <SelectItem key={l.value} value={l.value} className="text-xs">{l.label}</SelectItem>)}
             </SelectContent>
           </Select>
 
           <div className="flex-1" />
 
-          {/* Icon buttons */}
           {[
-            { icon: Copy, label: "Copy code", onClick: handleCopyCode, testId: "button-copy-code" },
-            { icon: Save, label: "Save as snippet", onClick: handleSaveSnippet, testId: "button-save-snippet" },
-            { icon: Eraser, label: "Clear editor", onClick: () => setCode("// Start coding here...\n"), testId: "button-clear-editor" },
-          ].map(({ icon: Icon, label, onClick, testId }) => (
-            <Tooltip key={testId} delayDuration={0}>
+            { icon: Copy, label: "Copy code", fn: () => { navigator.clipboard.writeText(code); toast({ title: "Copied!" }); }, id: "button-copy-code" },
+            { icon: Save, label: "Save as snippet", fn: async () => { await createSnippet.mutateAsync({ data: { title: `Snippet ${new Date().toLocaleString()}`, code, language } }); queryClient.invalidateQueries({ queryKey: getListSnippetsQueryKey() }); toast({ title: "Saved!" }); }, id: "button-save-snippet" },
+            { icon: Eraser, label: "Clear editor", fn: () => setCode("// Start coding here...\n"), id: "button-clear-editor" },
+          ].map(({ icon: Icon, label, fn, id }) => (
+            <Tooltip key={id} delayDuration={0}>
               <TooltipTrigger asChild>
                 <button
-                  className="flex items-center justify-center w-7 h-7 rounded-lg text-[#4a6080] hover:text-[#06b6d4] transition-colors"
-                  onClick={onClick}
-                  data-testid={testId}
+                  onClick={fn}
+                  data-testid={id}
+                  className="flex items-center justify-center w-7 h-7 rounded-lg transition-all"
+                  style={{ color: "#5a4a8a" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#a78bfa"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(124,58,237,0.12)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#5a4a8a"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
                 >
                   <Icon className="w-3.5 h-3.5" />
                 </button>
@@ -328,9 +245,12 @@ export default function EditorPage() {
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <button
-                className="flex items-center justify-center w-7 h-7 rounded-lg text-[#4a6080] hover:text-[#06b6d4] transition-colors"
                 onClick={() => setChatOpen(p => !p)}
                 data-testid="button-toggle-chat"
+                className="flex items-center justify-center w-7 h-7 rounded-lg transition-all"
+                style={{ color: "#5a4a8a" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#a78bfa"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(124,58,237,0.12)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#5a4a8a"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
               >
                 {chatOpen ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
               </button>
@@ -340,13 +260,12 @@ export default function EditorPage() {
         </div>
 
         {/* Monaco */}
-        <div className="flex-1 overflow-hidden" style={{ background: "#050a14" }}>
+        <div className="flex-1 overflow-hidden">
           <Editor
             height="100%"
             language={language}
             value={code}
             onChange={v => setCode(v ?? "")}
-            theme="vs-dark"
             options={{
               fontSize: 14,
               fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, monospace",
@@ -363,24 +282,33 @@ export default function EditorPage() {
               automaticLayout: true,
             }}
             beforeMount={monaco => {
-              monaco.editor.defineTheme("nexus-dark", {
+              monaco.editor.defineTheme("nexus", {
                 base: "vs-dark",
                 inherit: true,
-                rules: [],
+                rules: [
+                  { token: "keyword", foreground: "a78bfa", fontStyle: "bold" },
+                  { token: "string", foreground: "34d399" },
+                  { token: "comment", foreground: "4a3a6a", fontStyle: "italic" },
+                  { token: "number", foreground: "f472b6" },
+                  { token: "type", foreground: "60a5fa" },
+                  { token: "function", foreground: "c084fc" },
+                ],
                 colors: {
-                  "editor.background": "#050a14",
-                  "editor.lineHighlightBackground": "#0a1525",
-                  "editorLineNumber.foreground": "#2a4060",
-                  "editorLineNumber.activeForeground": "#06b6d4",
-                  "editor.selectionBackground": "#06b6d420",
-                  "editorCursor.foreground": "#06b6d4",
-                  "editor.findMatchBackground": "#06b6d430",
+                  "editor.background": "#04000e",
+                  "editor.foreground": "#c8b8f0",
+                  "editor.lineHighlightBackground": "#0d0620",
+                  "editorLineNumber.foreground": "#2a1a50",
+                  "editorLineNumber.activeForeground": "#7c3aed",
+                  "editor.selectionBackground": "#7c3aed33",
+                  "editorCursor.foreground": "#a78bfa",
+                  "editor.findMatchBackground": "#7c3aed44",
+                  "editorGutter.background": "#04000e",
+                  "editorBracketMatch.background": "#7c3aed33",
+                  "editorBracketMatch.border": "#7c3aed",
                 },
               });
             }}
-            onMount={(_, monaco) => {
-              monaco.editor.setTheme("nexus-dark");
-            }}
+            onMount={(_, monaco) => { monaco.editor.setTheme("nexus"); }}
           />
         </div>
       </div>
@@ -388,26 +316,19 @@ export default function EditorPage() {
       {/* Resize handle */}
       {chatOpen && (
         <div
-          className="w-0.5 cursor-col-resize shrink-0 transition-colors"
-          style={{ background: "rgba(6,182,212,0.1)" }}
-          onMouseEnter={e => (e.currentTarget.style.background = "rgba(6,182,212,0.4)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "rgba(6,182,212,0.1)")}
+          className="w-0.5 shrink-0 cursor-col-resize transition-all"
+          style={{ background: "rgba(124,58,237,0.12)" }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(124,58,237,0.5)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(124,58,237,0.12)")}
           onMouseDown={e => {
-            const startX = e.clientX;
-            const startWidth = editorWidth;
+            const startX = e.clientX, startW = editorWidth;
             const onMove = (ev: MouseEvent) => {
-              const parent = (e.target as HTMLElement).parentElement;
-              if (!parent) return;
-              const delta = ev.clientX - startX;
-              const newW = Math.min(80, Math.max(20, startWidth + (delta / parent.offsetWidth) * 100));
-              setEditorWidth(newW);
+              const p = (e.target as HTMLElement).parentElement;
+              if (!p) return;
+              setEditorWidth(Math.min(80, Math.max(20, startW + (ev.clientX - startX) / p.offsetWidth * 100)));
             };
-            const onUp = () => {
-              window.removeEventListener("mousemove", onMove);
-              window.removeEventListener("mouseup", onUp);
-            };
-            window.addEventListener("mousemove", onMove);
-            window.addEventListener("mouseup", onUp);
+            const onUp = () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+            window.addEventListener("mousemove", onMove); window.addEventListener("mouseup", onUp);
           }}
         />
       )}
@@ -416,39 +337,35 @@ export default function EditorPage() {
       {chatOpen && (
         <div
           className="flex flex-col overflow-hidden"
-          style={{ width: `${100 - editorWidth}%`, background: "rgba(4,9,20,0.95)" }}
+          style={{ width: `${100 - editorWidth}%`, background: "rgba(4,0,12,0.85)", backdropFilter: "blur(20px)" }}
         >
           {/* Chat header */}
           <div
-            className="flex items-center gap-2 px-4 py-2.5 shrink-0"
-            style={{ background: TOOLBAR_BG, borderBottom: PANEL_BORDER }}
+            className="flex items-center gap-3 px-4 py-2 shrink-0"
+            style={{ background: TOPBAR, borderBottom: DIVIDER, minHeight: "46px" }}
           >
-            <div className="flex items-center gap-2 flex-1">
-              <div
-                className="flex items-center justify-center w-6 h-6 rounded-md"
-                style={{ background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.3)" }}
-              >
-                <Sparkles className="w-3 h-3" style={{ color: "#06b6d4" }} />
-              </div>
-              <span
-                className="text-sm font-semibold gradient-text"
-                style={{ fontFamily: "var(--app-font-sans)" }}
-              >
-                Nexus AI
-              </span>
+            <div
+              className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0"
+              style={{
+                background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
+                boxShadow: "0 0 14px rgba(124,58,237,0.6)",
+              }}
+            >
+              <Bot className="w-3.5 h-3.5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold gradient-text-purple leading-none">Nexus AI</p>
+              <p className="text-[10px] mt-0.5" style={{ color: "#4a3a6a" }}>
+                {isStreaming ? "Generating..." : "Ready"}
+              </p>
             </div>
 
-            {/* Conversations dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg transition-all"
-                  style={{
-                    color: "rgba(6,182,212,0.8)",
-                    background: "rgba(6,182,212,0.06)",
-                    border: "1px solid rgba(6,182,212,0.15)",
-                  }}
                   data-testid="dropdown-conversations"
+                  className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-all"
+                  style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.22)", color: "#a78bfa" }}
                 >
                   Chats <ChevronDown className="w-3 h-3" />
                 </button>
@@ -457,7 +374,7 @@ export default function EditorPage() {
                 <DropdownMenuItem
                   onClick={startNewConversation}
                   className="text-xs gap-2 cursor-pointer"
-                  style={{ color: "#06b6d4" }}
+                  style={{ color: "#a78bfa" }}
                   data-testid="button-new-conversation"
                 >
                   <Plus className="w-3 h-3" /> New conversation
@@ -467,16 +384,13 @@ export default function EditorPage() {
                   <DropdownMenuItem
                     key={conv.id}
                     onClick={() => { setConversationId(conv.id); setMessages([]); }}
-                    className={cn(
-                      "text-xs flex items-center justify-between group cursor-pointer",
-                      conversationId === conv.id && "bg-accent/10"
-                    )}
+                    className={cn("text-xs flex items-center justify-between group cursor-pointer", conversationId === conv.id && "bg-primary/10")}
                     data-testid={`conversation-item-${conv.id}`}
                   >
                     <span className="truncate flex-1">{conv.title}</span>
                     <button
-                      onClick={e => handleDeleteConversation(conv.id, e)}
-                      className="opacity-0 group-hover:opacity-100 hover:text-destructive ml-1 transition-opacity"
+                      onClick={async e => { e.stopPropagation(); await deleteConversation.mutateAsync({ id: conv.id }); queryClient.invalidateQueries({ queryKey: getListOpenaiConversationsQueryKey() }); if (conversationId === conv.id) startNewConversation(); }}
+                      className="opacity-0 group-hover:opacity-100 hover:text-destructive ml-1"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -489,96 +403,106 @@ export default function EditorPage() {
           {/* Action pills */}
           <div
             className="flex flex-wrap gap-1.5 px-4 py-2.5 shrink-0"
-            style={{ borderBottom: PANEL_BORDER, background: "rgba(4,9,20,0.6)" }}
+            style={{ borderBottom: DIVIDER, background: "rgba(6,0,18,0.6)" }}
           >
-            {AI_ACTIONS.map(action => (
+            {AI_ACTIONS.map(a => (
               <button
-                key={action.label}
-                onClick={() => { setChatInput(action.prompt); textareaRef.current?.focus(); }}
+                key={a.label}
+                onClick={() => { setChatInput(a.prompt); textareaRef.current?.focus(); }}
                 className="action-pill"
-                data-testid={`button-action-${action.label.toLowerCase().replace(/\s+/g, "-")}`}
+                data-testid={`button-action-${a.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                {action.label}
+                {a.label}
               </button>
             ))}
           </div>
 
           {/* Messages */}
           <ScrollArea className="flex-1">
-            <div className="p-4 space-y-5">
+            <div className="p-5 space-y-5 min-h-full">
               {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-48 text-center gap-3 mt-4">
+                <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
                   <div
-                    className="flex items-center justify-center w-14 h-14 rounded-2xl"
+                    className="relative flex items-center justify-center w-20 h-20 rounded-3xl"
                     style={{
-                      background: "linear-gradient(135deg, rgba(6,182,212,0.15), rgba(59,130,246,0.1))",
-                      border: "1px solid rgba(6,182,212,0.25)",
-                      boxShadow: "0 0 24px rgba(6,182,212,0.1)",
+                      background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.12))",
+                      border: "1px solid rgba(124,58,237,0.35)",
+                      boxShadow: "0 0 40px rgba(124,58,237,0.2), inset 0 0 40px rgba(124,58,237,0.05)",
                     }}
                   >
-                    <Zap className="w-6 h-6" style={{ color: "#06b6d4" }} />
+                    <Zap className="w-9 h-9" style={{ color: "#a78bfa" }} />
+                    <div
+                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg, #7c3aed, #06b6d4)", boxShadow: "0 0 8px rgba(124,58,237,0.8)" }}
+                    >
+                      <Sparkles className="w-2.5 h-2.5 text-white" />
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: "#e0eaf5" }}>
-                      Your AI co-pilot is ready
-                    </p>
-                    <p className="text-xs mt-1" style={{ color: "#3a5070" }}>
-                      Use action buttons above or type a question
+                    <p className="text-base font-bold gradient-text-purple">Your AI co-pilot is ready</p>
+                    <p className="text-xs mt-2 max-w-[200px] mx-auto" style={{ color: "#3a2a5a", lineHeight: "1.5" }}>
+                      Write code, ask questions, or click an action button above
                     </p>
                   </div>
                 </div>
               )}
 
-              {messages.map(message => (
+              {messages.map(msg => (
                 <div
-                  key={message.id}
-                  className={cn("flex gap-3", message.role === "user" ? "flex-row-reverse" : "flex-row")}
-                  data-testid={`message-${message.role}-${message.id}`}
+                  key={msg.id}
+                  className={cn("flex gap-3", msg.role === "user" ? "flex-row-reverse" : "flex-row")}
+                  data-testid={`message-${msg.role}-${msg.id}`}
                 >
-                  {/* Avatar */}
                   <div
-                    className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
+                    className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
                     style={
-                      message.role === "user"
-                        ? { background: "linear-gradient(135deg, #06b6d4, #3b82f6)", color: "#fff" }
-                        : {
-                            background: "rgba(6,182,212,0.12)",
-                            border: "1px solid rgba(6,182,212,0.3)",
-                            color: "#06b6d4",
-                          }
+                      msg.role === "user"
+                        ? { background: "linear-gradient(135deg, #7c3aed, #3b82f6)", boxShadow: "0 0 10px rgba(124,58,237,0.5)" }
+                        : { background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)" }
                     }
                   >
-                    {message.role === "user" ? "U" : <Sparkles className="w-3 h-3" />}
+                    {msg.role === "user"
+                      ? <span className="text-[10px] font-bold text-white">U</span>
+                      : <Bot className="w-3.5 h-3.5" style={{ color: "#a78bfa" }} />}
                   </div>
 
-                  {/* Bubble */}
                   <div
-                    className="max-w-[85%] rounded-xl px-3.5 py-2.5"
+                    className="max-w-[86%] rounded-2xl px-4 py-3"
                     style={
-                      message.role === "user"
+                      msg.role === "user"
                         ? {
-                            background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.15))",
-                            border: "1px solid rgba(6,182,212,0.3)",
-                            color: "#e0eaf5",
+                            background: "linear-gradient(135deg, rgba(124,58,237,0.25), rgba(59,130,246,0.18))",
+                            border: "1px solid rgba(124,58,237,0.4)",
+                            boxShadow: "0 2px 12px rgba(124,58,237,0.15)",
                           }
                         : {
-                            background: "rgba(6,12,26,0.7)",
-                            border: "1px solid rgba(6,182,212,0.1)",
-                            color: "#a8b8d0",
+                            background: "rgba(8,2,22,0.7)",
+                            border: "1px solid rgba(124,58,237,0.12)",
                           }
                     }
                   >
-                    {message.role === "assistant" ? (
-                      message.content ? (
-                        <MessageContent content={message.content} />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="w-3 h-3 animate-spin" style={{ color: "#06b6d4" }} />
-                          <span className="text-xs" style={{ color: "#3a5070" }}>Thinking...</span>
-                        </div>
-                      )
+                    {msg.role === "assistant" ? (
+                      msg.content
+                        ? <MessageContent content={msg.content} />
+                        : (
+                          <div className="flex items-center gap-2.5 py-1">
+                            <div className="flex gap-1">
+                              {[0, 1, 2].map(i => (
+                                <div
+                                  key={i}
+                                  className="w-1.5 h-1.5 rounded-full"
+                                  style={{
+                                    background: "#7c3aed",
+                                    animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs" style={{ color: "#4a3a6a" }}>Thinking...</span>
+                          </div>
+                        )
                     ) : (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "#d4c8ff" }}>{msg.content}</p>
                     )}
                   </div>
                 </div>
@@ -587,54 +511,50 @@ export default function EditorPage() {
             </div>
           </ScrollArea>
 
-          {/* Input */}
-          <div className="p-3 shrink-0" style={{ borderTop: PANEL_BORDER }}>
+          {/* Input area */}
+          <div className="p-4 shrink-0" style={{ borderTop: DIVIDER }}>
             <div
-              className="flex items-end gap-2 rounded-xl px-3 py-2.5 glow-focus transition-all"
+              className="flex items-end gap-2 rounded-2xl px-4 py-3 transition-all"
               style={{
-                background: "rgba(6,12,26,0.8)",
-                border: "1px solid rgba(6,182,212,0.18)",
+                background: "rgba(8,2,22,0.8)",
+                border: "1px solid rgba(124,58,237,0.22)",
               }}
+              onFocus={() => {}}
             >
               <textarea
                 ref={textareaRef}
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about your code... (Enter to send)"
+                placeholder="Ask anything about your code..."
                 rows={1}
                 data-testid="input-chat-message"
-                className="flex-1 bg-transparent text-sm outline-none resize-none min-h-[20px] max-h-32 leading-5"
-                style={{ color: "#c8d8e8", fontFamily: "var(--app-font-sans)" }}
-                onInput={e => {
-                  const el = e.target as HTMLTextAreaElement;
-                  el.style.height = "auto";
-                  el.style.height = `${el.scrollHeight}px`;
-                }}
+                className="flex-1 bg-transparent text-sm outline-none resize-none min-h-[22px] max-h-36 leading-[1.5]"
+                style={{ color: "#d4c8ff", fontFamily: "'Inter', sans-serif" }}
+                onInput={e => { const el = e.target as HTMLTextAreaElement; el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; }}
               />
               <button
                 onClick={() => sendMessage(chatInput)}
                 disabled={!chatInput.trim() || isStreaming || !conversationId}
                 data-testid="button-send-message"
-                className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-all disabled:opacity-30"
-                style={{
-                  background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
-                  boxShadow: "0 0 12px rgba(6,182,212,0.4)",
-                }}
+                className="btn-nexus flex items-center justify-center w-9 h-9 rounded-xl shrink-0"
               >
-                {isStreaming ? (
-                  <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
-                ) : (
-                  <Send className="w-3.5 h-3.5 text-white" />
-                )}
+                {isStreaming ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
               </button>
             </div>
-            <p className="text-[10px] mt-1.5 text-center" style={{ color: "#2a3a50" }}>
-              Shift+Enter for new line · Context includes your current code
+            <p className="text-[10px] text-center mt-2" style={{ color: "#2a1a40" }}>
+              Enter to send · Shift+Enter for new line · AI has full context of your code
             </p>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+          40% { transform: translateY(-6px); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

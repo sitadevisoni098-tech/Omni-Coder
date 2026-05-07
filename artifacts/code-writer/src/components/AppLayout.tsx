@@ -1,6 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Code2, BookMarked, Plus, Moon, Sun, Zap, Cpu } from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
+import { Code2, BookMarked, Plus, Cpu, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -12,106 +11,105 @@ const navItems = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden" style={{ background: "hsl(218 40% 4%)" }}>
-      {/* Sidebar */}
-      <aside
-        className="flex flex-col w-14 shrink-0 relative"
+    <div className="relative flex flex-col w-screen h-screen overflow-hidden">
+      {/* ── Animated background ── */}
+      <div className="nexus-bg">
+        <div className="orb-3" />
+      </div>
+      <div className="nexus-grid" />
+
+      {/* ── Top Navbar ── */}
+      <header
+        className="relative z-20 flex items-center gap-4 px-5 shrink-0"
         style={{
-          background: "hsl(218 45% 3%)",
-          borderRight: "1px solid rgba(6,182,212,0.1)",
+          height: "54px",
+          background: "rgba(6,0,16,0.85)",
+          backdropFilter: "blur(24px)",
+          borderBottom: "1px solid rgba(124,58,237,0.2)",
+          boxShadow: "0 1px 0 rgba(124,58,237,0.1), 0 8px 32px rgba(0,0,0,0.4)",
         }}
       >
-        {/* Subtle gradient line on right edge */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-px"
-          style={{ background: "linear-gradient(to bottom, transparent, rgba(6,182,212,0.3), transparent)" }}
-        />
-
         {/* Logo */}
-        <div
-          className="flex items-center justify-center h-14 shrink-0"
-          style={{ borderBottom: "1px solid rgba(6,182,212,0.08)" }}
-        >
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-xl pulse-ring"
-            style={{
-              background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.15))",
-              border: "1px solid rgba(6,182,212,0.5)",
-              boxShadow: "0 0 16px rgba(6,182,212,0.3)",
-            }}
-          >
-            <Cpu className="w-4 h-4" style={{ color: "#06b6d4" }} />
+        <Link href="/">
+          <div className="flex items-center gap-2.5 cursor-pointer select-none">
+            <div
+              className="flex items-center justify-center w-8 h-8 rounded-lg"
+              style={{
+                background: "linear-gradient(135deg, #7c3aed, #3b82f6)",
+                boxShadow: "0 0 16px rgba(124,58,237,0.6), 0 0 32px rgba(124,58,237,0.2)",
+              }}
+            >
+              <Cpu className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span
+                className="text-base font-black tracking-tight gradient-text-purple"
+                style={{ fontFamily: "'Inter', sans-serif", letterSpacing: "-0.02em" }}
+              >
+                PowerCode
+              </span>
+              <span
+                className="text-base font-black tracking-tight"
+                style={{
+                  background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                AI
+              </span>
+            </div>
           </div>
-        </div>
+        </Link>
 
-        {/* Nav */}
-        <nav className="flex flex-col gap-2 p-2 flex-1">
+        {/* Divider */}
+        <div className="w-px h-6" style={{ background: "rgba(124,58,237,0.25)" }} />
+
+        {/* Nav items */}
+        <nav className="flex items-center gap-1">
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = href === "/" ? location === "/" : location.startsWith(href);
             return (
-              <Tooltip key={href} delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Link href={href}>
-                    <button
-                      data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
-                      className={cn(
-                        "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
-                        isActive
-                          ? "nav-active"
-                          : "text-[#4a6080] hover:text-[#06b6d4]"
-                      )}
-                      style={!isActive ? {
-                        border: "1px solid transparent",
-                      } : undefined}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          (e.currentTarget as HTMLButtonElement).style.background = "rgba(6,182,212,0.08)";
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(6,182,212,0.2)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          (e.currentTarget as HTMLButtonElement).style.background = "";
-                          (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
-                        }
-                      }}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </button>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-xs">
+              <Link key={href} href={href}>
+                <button
+                  data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
+                  className={cn(
+                    "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    isActive ? "nav-item-active" : "text-[#6a5a9a] hover:text-[#a78bfa]"
+                  )}
+                  style={!isActive ? { border: "1px solid transparent" } : undefined}
+                >
+                  <Icon className="w-3.5 h-3.5" />
                   {label}
-                </TooltipContent>
-              </Tooltip>
+                </button>
+              </Link>
             );
           })}
         </nav>
 
-        {/* Theme toggle */}
-        <div className="p-2 shrink-0" style={{ borderTop: "1px solid rgba(6,182,212,0.08)" }}>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <button
-                onClick={toggleTheme}
-                data-testid="button-toggle-theme"
-                className="flex items-center justify-center w-10 h-10 rounded-xl text-[#4a6080] hover:text-[#06b6d4] transition-colors"
-              >
-                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
-              {theme === "dark" ? "Light mode" : "Dark mode"}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </aside>
+        <div className="flex-1" />
 
-      {/* Main content */}
-      <main className="flex-1 overflow-hidden grid-bg">
+        {/* Right badge */}
+        <div
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+          style={{
+            background: "rgba(124,58,237,0.1)",
+            border: "1px solid rgba(124,58,237,0.25)",
+          }}
+        >
+          <Sparkles className="w-3 h-3" style={{ color: "#a78bfa" }} />
+          <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>
+            AI Powered
+          </span>
+        </div>
+      </header>
+
+      {/* ── Page content ── */}
+      <main className="relative z-10 flex-1 overflow-hidden">
         {children}
       </main>
     </div>

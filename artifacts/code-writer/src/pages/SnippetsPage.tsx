@@ -2,68 +2,45 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  useListSnippets,
-  useDeleteSnippet,
-  useUpdateSnippet,
-  useGetSnippetStats,
-  getListSnippetsQueryKey,
-  getGetSnippetStatsQueryKey,
+  useListSnippets, useDeleteSnippet, useUpdateSnippet, useGetSnippetStats,
+  getListSnippetsQueryKey, getGetSnippetStatsQueryKey,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Plus,
-  Search,
-  Star,
-  Trash2,
-  MoreHorizontal,
-  Edit,
-  Copy,
-  Code2,
-  BookMarked,
-  Layers,
+  Plus, Search, Star, Trash2, MoreHorizontal, Edit, Copy, Code2, Layers, BookMarked,
 } from "lucide-react";
 
-const LANG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  javascript: { bg: "rgba(250,204,21,0.1)", text: "#fbbf24", border: "rgba(250,204,21,0.25)" },
-  typescript: { bg: "rgba(59,130,246,0.1)", text: "#60a5fa", border: "rgba(59,130,246,0.25)" },
-  python:     { bg: "rgba(34,197,94,0.1)",  text: "#4ade80", border: "rgba(34,197,94,0.25)" },
-  rust:       { bg: "rgba(249,115,22,0.1)", text: "#fb923c", border: "rgba(249,115,22,0.25)" },
-  go:         { bg: "rgba(6,182,212,0.1)",  text: "#22d3ee", border: "rgba(6,182,212,0.25)" },
-  java:       { bg: "rgba(239,68,68,0.1)",  text: "#f87171", border: "rgba(239,68,68,0.25)" },
-  cpp:        { bg: "rgba(139,92,246,0.1)", text: "#a78bfa", border: "rgba(139,92,246,0.25)" },
-  html:       { bg: "rgba(249,115,22,0.1)", text: "#fb923c", border: "rgba(249,115,22,0.25)" },
-  css:        { bg: "rgba(236,72,153,0.1)", text: "#f472b6", border: "rgba(236,72,153,0.25)" },
-  sql:        { bg: "rgba(99,102,241,0.1)", text: "#818cf8", border: "rgba(99,102,241,0.25)" },
+const LANG_COLORS: Record<string, { bg: string; color: string; border: string }> = {
+  javascript: { bg: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "rgba(251,191,36,0.3)" },
+  typescript: { bg: "rgba(96,165,250,0.12)", color: "#60a5fa", border: "rgba(96,165,250,0.3)" },
+  python:     { bg: "rgba(52,211,153,0.12)", color: "#34d399", border: "rgba(52,211,153,0.3)" },
+  rust:       { bg: "rgba(251,146,60,0.12)", color: "#fb923c", border: "rgba(251,146,60,0.3)" },
+  go:         { bg: "rgba(34,211,238,0.12)", color: "#22d3ee", border: "rgba(34,211,238,0.3)" },
+  java:       { bg: "rgba(248,113,113,0.12)", color: "#f87171", border: "rgba(248,113,113,0.3)" },
+  cpp:        { bg: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "rgba(167,139,250,0.3)" },
+  html:       { bg: "rgba(251,146,60,0.12)", color: "#fb923c", border: "rgba(251,146,60,0.3)" },
+  css:        { bg: "rgba(244,114,182,0.12)", color: "#f472b6", border: "rgba(244,114,182,0.3)" },
+  sql:        { bg: "rgba(129,140,248,0.12)", color: "#818cf8", border: "rgba(129,140,248,0.3)" },
 };
 
 function LangBadge({ language }: { language: string }) {
-  const c = LANG_COLORS[language] ?? { bg: "rgba(6,182,212,0.08)", text: "#06b6d4", border: "rgba(6,182,212,0.2)" };
+  const c = LANG_COLORS[language] ?? { bg: "rgba(124,58,237,0.12)", color: "#a78bfa", border: "rgba(124,58,237,0.3)" };
   return (
     <span
       className="text-[10px] px-2 py-0.5 rounded-full font-mono"
-      style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+      style={{ background: c.bg, color: c.color, border: `1px solid ${c.border}` }}
     >
       {language}
     </span>
   );
 }
-
-const PANEL_BORDER = "1px solid rgba(6,182,212,0.1)";
 
 export default function SnippetsPage() {
   const { toast } = useToast();
@@ -78,7 +55,6 @@ export default function SnippetsPage() {
   const updateSnippet = useUpdateSnippet();
 
   const languages = Array.from(new Set(snippets.map(s => s.language)));
-
   const filtered = snippets.filter(s => {
     const q = search.toLowerCase();
     return (
@@ -94,77 +70,91 @@ export default function SnippetsPage() {
     queryClient.invalidateQueries({ queryKey: getGetSnippetStatsQueryKey() });
     toast({ title: "Snippet deleted" });
   };
-
   const handleFav = async (id: number, cur: boolean) => {
     await updateSnippet.mutateAsync({ id, data: { isFavorited: !cur } });
     queryClient.invalidateQueries({ queryKey: getListSnippetsQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetSnippetStatsQueryKey() });
   };
-
-  const handleCopy = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast({ title: "Copied to clipboard" });
-  };
+  const handleCopy = (code: string) => { navigator.clipboard.writeText(code); toast({ title: "Copied!" }); };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden" style={{ background: "rgba(4,0,12,0.75)", backdropFilter: "blur(20px)" }}>
       {/* Header */}
       <div
-        className="px-6 py-4 shrink-0"
-        style={{ background: "rgba(4,9,20,0.9)", borderBottom: PANEL_BORDER }}
+        className="px-6 py-5 shrink-0"
+        style={{ background: "rgba(4,0,12,0.9)", borderBottom: "1px solid rgba(124,58,237,0.15)" }}
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
+        {/* Title row */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
             <div
-              className="flex items-center justify-center w-8 h-8 rounded-xl"
+              className="flex items-center justify-center w-10 h-10 rounded-2xl shrink-0"
               style={{
-                background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.15))",
-                border: "1px solid rgba(6,182,212,0.35)",
-                boxShadow: "0 0 16px rgba(6,182,212,0.2)",
+                background: "linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.15))",
+                border: "1px solid rgba(124,58,237,0.4)",
+                boxShadow: "0 0 20px rgba(124,58,237,0.25)",
               }}
             >
-              <BookMarked className="w-4 h-4" style={{ color: "#06b6d4" }} />
+              <BookMarked className="w-5 h-5" style={{ color: "#a78bfa" }} />
             </div>
             <div>
-              <h1 className="text-base font-bold" style={{ color: "#e0eaf5", fontFamily: "var(--app-font-sans)" }}>
+              <h1
+                className="text-xl font-black gradient-text-purple"
+                style={{ letterSpacing: "-0.02em" }}
+              >
                 Snippet Library
               </h1>
-              {stats && (
-                <p className="text-[11px]" style={{ color: "#3a5070" }}>
-                  {stats.total} snippets · {stats.favorites} favorited
-                </p>
-              )}
+              <p className="text-xs mt-0.5" style={{ color: "#4a3a6a" }}>
+                Your saved code collection
+              </p>
             </div>
           </div>
 
           <Link href="/new-snippet">
             <button
-              className="nexus-btn flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl text-white"
+              className="btn-nexus flex items-center gap-2 text-sm px-5 py-2.5 rounded-xl"
               data-testid="button-new-snippet"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
               New Snippet
             </button>
           </Link>
         </div>
 
         {/* Stats row */}
-        {stats && stats.byLanguage.length > 0 && (
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
-            {stats.byLanguage.slice(0, 5).map(l => (
+        {stats && (
+          <div className="flex items-center gap-3 mb-5 flex-wrap">
+            {[
+              { icon: Code2, label: "Total", value: stats.total },
+              { icon: Star, label: "Favorited", value: stats.favorites },
+            ].map(s => (
+              <div
+                key={s.label}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl"
+                style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)" }}
+              >
+                <s.icon className="w-3.5 h-3.5" style={{ color: "#7c3aed" }} />
+                <span className="text-xs" style={{ color: "#6a5a9a" }}>{s.label}</span>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: "#a78bfa" }}
+                  data-testid={`text-${s.label.toLowerCase()}-snippets`}
+                >
+                  {s.value}
+                </span>
+              </div>
+            ))}
+            {stats.byLanguage.slice(0, 4).map(l => (
               <div
                 key={l.language}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px]"
-                style={{
-                  background: "rgba(6,182,212,0.06)",
-                  border: "1px solid rgba(6,182,212,0.12)",
-                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
+                style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.1)" }}
               >
-                <Layers className="w-3 h-3" style={{ color: "#06b6d4" }} />
-                <span style={{ color: "#a8b8d0" }}>{l.language}</span>
+                <Layers className="w-3 h-3" style={{ color: "#5a3a8a" }} />
+                <span className="text-xs" style={{ color: "#6a5a9a" }}>{l.language}</span>
                 <span
-                  className="px-1.5 py-0 rounded-full text-[9px] font-bold"
-                  style={{ background: "rgba(6,182,212,0.15)", color: "#06b6d4" }}
+                  className="text-[10px] font-bold px-1.5 rounded-full"
+                  style={{ background: "rgba(124,58,237,0.2)", color: "#a78bfa" }}
                 >
                   {l.count}
                 </span>
@@ -173,33 +163,27 @@ export default function SnippetsPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "#2a4060" }} />
+        {/* Filter row */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "#3a2a5a" }} />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search snippets..."
               data-testid="input-search-snippets"
-              className="w-full h-8 pl-8 pr-3 rounded-lg text-xs outline-none transition-all"
-              style={{
-                background: "rgba(6,12,26,0.8)",
-                border: "1px solid rgba(6,182,212,0.15)",
-                color: "#c8d8e8",
-                fontFamily: "var(--app-font-sans)",
-              }}
-              onFocus={e => (e.currentTarget.style.borderColor = "rgba(6,182,212,0.45)")}
-              onBlur={e => (e.currentTarget.style.borderColor = "rgba(6,182,212,0.15)")}
+              className="h-9 pl-9 pr-4 rounded-xl text-xs w-56 glow-input"
+              style={{ borderRadius: "0.75rem" }}
             />
           </div>
 
           <Select value={langFilter} onValueChange={setLangFilter}>
             <SelectTrigger
-              className="w-36 h-8 text-xs border-[rgba(6,182,212,0.15)] bg-[rgba(6,12,26,0.8)] text-[#a8b8d0]"
+              className="w-40 h-9 text-xs"
+              style={{ background: "rgba(8,2,20,0.8)", border: "1px solid rgba(124,58,237,0.22)", color: "#9080c0", borderRadius: "0.75rem" }}
               data-testid="select-language-filter"
             >
-              <SelectValue placeholder="Language" />
+              <SelectValue placeholder="All languages" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs">All languages</SelectItem>
@@ -210,15 +194,15 @@ export default function SnippetsPage() {
           <button
             onClick={() => setFavsOnly(p => !p)}
             data-testid="button-filter-favorites"
-            className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs transition-all"
+            className="flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-medium transition-all"
             style={
               favsOnly
                 ? { background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.4)", color: "#fbbf24" }
-                : { background: "rgba(6,12,26,0.8)", border: "1px solid rgba(6,182,212,0.15)", color: "#a8b8d0" }
+                : { background: "rgba(8,2,20,0.8)", border: "1px solid rgba(124,58,237,0.22)", color: "#6a5a9a" }
             }
           >
             <Star className="w-3.5 h-3.5" fill={favsOnly ? "currentColor" : "none"} />
-            Favorites
+            Favorites only
           </button>
         </div>
       </div>
@@ -227,86 +211,67 @@ export default function SnippetsPage() {
       <ScrollArea className="flex-1">
         <div className="p-6">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+              {Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-44 rounded-2xl animate-pulse"
-                  style={{ background: "rgba(6,182,212,0.04)", border: "1px solid rgba(6,182,212,0.08)" }}
+                  className="h-48 rounded-2xl animate-pulse"
+                  style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.08)" }}
                 />
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
+            <div className="flex flex-col items-center justify-center h-72 text-center gap-4">
               <div
-                className="flex items-center justify-center w-16 h-16 rounded-2xl"
+                className="flex items-center justify-center w-20 h-20 rounded-3xl"
                 style={{
-                  background: "rgba(6,182,212,0.06)",
-                  border: "1px solid rgba(6,182,212,0.15)",
+                  background: "rgba(124,58,237,0.08)",
+                  border: "1px solid rgba(124,58,237,0.18)",
+                  boxShadow: "0 0 30px rgba(124,58,237,0.1)",
                 }}
               >
-                <Code2 className="w-7 h-7" style={{ color: "rgba(6,182,212,0.4)" }} />
+                <Code2 className="w-9 h-9" style={{ color: "rgba(124,58,237,0.4)" }} />
               </div>
               <div>
-                <p className="text-sm font-semibold" style={{ color: "#e0eaf5" }}>No snippets found</p>
-                <p className="text-xs mt-1" style={{ color: "#3a5070" }}>
+                <p className="text-base font-bold" style={{ color: "#d4c8ff" }}>No snippets found</p>
+                <p className="text-xs mt-2" style={{ color: "#3a2a5a" }}>
                   {search || langFilter !== "all" || favsOnly
                     ? "Try adjusting your filters"
-                    : "Save code from the editor or create a new snippet"}
+                    : "Save code from the editor to build your library"}
                 </p>
               </div>
               <Link href="/new-snippet">
                 <button
-                  className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl transition-all mt-1"
-                  style={{
-                    background: "rgba(6,182,212,0.08)",
-                    border: "1px solid rgba(6,182,212,0.25)",
-                    color: "#06b6d4",
-                  }}
+                  className="flex items-center gap-2 text-xs px-4 py-2 rounded-xl transition-all mt-1"
+                  style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)", color: "#a78bfa" }}
                 >
-                  <Plus className="w-3.5 h-3.5" /> Create snippet
+                  <Plus className="w-3.5 h-3.5" /> Create your first snippet
                 </button>
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
               {filtered.map(snippet => (
                 <div
                   key={snippet.id}
                   data-testid={`card-snippet-${snippet.id}`}
-                  className="group flex flex-col rounded-2xl overflow-hidden transition-all duration-200"
-                  style={{
-                    background: "rgba(4,10,22,0.8)",
-                    border: "1px solid rgba(6,182,212,0.1)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(6,182,212,0.35)";
-                    (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 20px rgba(6,182,212,0.1), 0 4px 24px rgba(0,0,0,0.3)";
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(6,182,212,0.1)";
-                    (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-                  }}
+                  className="snippet-card flex flex-col"
                 >
-                  {/* Thin top accent line */}
-                  <div
-                    className="h-px w-full"
-                    style={{ background: "linear-gradient(90deg, transparent, rgba(6,182,212,0.5), transparent)" }}
-                  />
+                  {/* Top shimmer line */}
+                  <div className="shimmer-line" style={{ opacity: 0.6 }} />
 
                   {/* Card head */}
-                  <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-2">
+                  <div className="flex items-start justify-between gap-2 px-4 pt-4 pb-2">
                     <div className="flex-1 min-w-0">
                       <h3
-                        className="text-sm font-semibold truncate"
-                        style={{ color: "#e0eaf5" }}
+                        className="text-sm font-bold truncate"
+                        style={{ color: "#d4c8ff" }}
                         data-testid={`text-snippet-title-${snippet.id}`}
                       >
                         {snippet.title}
                       </h3>
                       {snippet.description && (
-                        <p className="text-xs mt-0.5 line-clamp-1" style={{ color: "#3a5070" }}>
+                        <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: "#3a2a5a" }}>
                           {snippet.description}
                         </p>
                       )}
@@ -317,62 +282,55 @@ export default function SnippetsPage() {
                   {/* Code preview */}
                   <div
                     className="mx-4 mb-3 rounded-xl overflow-hidden"
-                    style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(6,182,212,0.08)" }}
+                    style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(124,58,237,0.1)" }}
                   >
                     <pre
-                      className="p-3 text-[11px] leading-relaxed overflow-hidden max-h-20 font-mono"
-                      style={{ color: "#4a7090" }}
+                      className="p-3 text-[11px] leading-relaxed overflow-hidden max-h-[80px] font-mono"
+                      style={{ color: "#3a2a5a", margin: 0 }}
                     >
-                      {snippet.code.slice(0, 180)}{snippet.code.length > 180 ? "…" : ""}
+                      {snippet.code.slice(0, 200)}{snippet.code.length > 200 ? "…" : ""}
                     </pre>
                   </div>
 
                   {/* Footer */}
                   <div
-                    className="flex items-center gap-1 px-4 pb-3 mt-auto"
-                    style={{ borderTop: "1px solid rgba(6,182,212,0.06)", paddingTop: "8px" }}
+                    className="flex items-center gap-1 px-4 pb-3 pt-2 mt-auto"
+                    style={{ borderTop: "1px solid rgba(124,58,237,0.08)" }}
                   >
-                    <span className="text-[10px] flex-1" style={{ color: "#2a4060" }}>
+                    <span className="text-[10px] flex-1" style={{ color: "#2a1a40" }}>
                       {new Date(snippet.updatedAt).toLocaleDateString()}
                     </span>
 
-                    {[
-                      {
-                        icon: Star,
-                        onClick: () => handleFav(snippet.id, snippet.isFavorited),
-                        testId: `button-favorite-${snippet.id}`,
-                        active: snippet.isFavorited,
-                        activeColor: "#fbbf24",
-                      },
-                      {
-                        icon: Copy,
-                        onClick: () => handleCopy(snippet.code),
-                        testId: `button-copy-${snippet.id}`,
-                        active: false,
-                        activeColor: "#06b6d4",
-                      },
-                    ].map(({ icon: Icon, onClick, testId, active, activeColor }) => (
-                      <button
-                        key={testId}
-                        onClick={onClick}
-                        data-testid={testId}
-                        className="p-1.5 rounded-lg transition-all"
-                        style={{ color: active ? activeColor : "#2a4060" }}
-                        onMouseEnter={e => (e.currentTarget.style.color = activeColor)}
-                        onMouseLeave={e => (e.currentTarget.style.color = active ? activeColor : "#2a4060")}
-                      >
-                        <Icon className="w-3.5 h-3.5" fill={active && Icon === Star ? "currentColor" : "none"} />
-                      </button>
-                    ))}
+                    <button
+                      onClick={() => handleFav(snippet.id, snippet.isFavorited)}
+                      data-testid={`button-favorite-${snippet.id}`}
+                      className="p-1.5 rounded-lg transition-all"
+                      style={{ color: snippet.isFavorited ? "#fbbf24" : "#2a1a40" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "#fbbf24")}
+                      onMouseLeave={e => (e.currentTarget.style.color = snippet.isFavorited ? "#fbbf24" : "#2a1a40")}
+                    >
+                      <Star className="w-3.5 h-3.5" fill={snippet.isFavorited ? "currentColor" : "none"} />
+                    </button>
+
+                    <button
+                      onClick={() => handleCopy(snippet.code)}
+                      data-testid={`button-copy-${snippet.id}`}
+                      className="p-1.5 rounded-lg transition-all"
+                      style={{ color: "#2a1a40" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "#a78bfa")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "#2a1a40")}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
                           data-testid={`button-more-${snippet.id}`}
-                          className="p-1.5 rounded-lg transition-colors"
-                          style={{ color: "#2a4060" }}
-                          onMouseEnter={e => (e.currentTarget.style.color = "#06b6d4")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "#2a4060")}
+                          className="p-1.5 rounded-lg transition-all"
+                          style={{ color: "#2a1a40" }}
+                          onMouseEnter={e => (e.currentTarget.style.color = "#a78bfa")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "#2a1a40")}
                         >
                           <MoreHorizontal className="w-3.5 h-3.5" />
                         </button>
