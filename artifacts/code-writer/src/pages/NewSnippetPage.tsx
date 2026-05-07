@@ -10,12 +10,7 @@ import {
   getGetSnippetQueryKey,
   getGetSnippetStatsQueryKey,
 } from "@workspace/api-client-react";
-import { useTheme } from "@/components/ThemeProvider";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Plus, FilePlus } from "lucide-react";
 
 const LANGUAGES = [
   { value: "javascript", label: "JavaScript" },
@@ -48,13 +43,14 @@ const LANGUAGES = [
   { value: "kotlin", label: "Kotlin" },
 ];
 
+const PANEL_BORDER = "1px solid rgba(6,182,212,0.12)";
+
 export default function NewSnippetPage() {
   const params = useParams<{ id?: string }>();
   const snippetId = params.id ? parseInt(params.id, 10) : undefined;
   const isEditing = !!snippetId;
 
   const [, setLocation] = useLocation();
-  const { theme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -63,162 +59,220 @@ export default function NewSnippetPage() {
   const [language, setLanguage] = useState("javascript");
   const [description, setDescription] = useState("");
 
-  const { data: existingSnippet } = useGetSnippet(
+  const { data: existing } = useGetSnippet(
     snippetId!,
     { query: { enabled: isEditing, queryKey: getGetSnippetQueryKey(snippetId!) } }
   );
 
   useEffect(() => {
-    if (existingSnippet) {
-      setTitle(existingSnippet.title);
-      setCode(existingSnippet.code);
-      setLanguage(existingSnippet.language);
-      setDescription(existingSnippet.description ?? "");
+    if (existing) {
+      setTitle(existing.title);
+      setCode(existing.code);
+      setLanguage(existing.language);
+      setDescription(existing.description ?? "");
     }
-  }, [existingSnippet]);
+  }, [existing]);
 
   const createSnippet = useCreateSnippet();
   const updateSnippet = useUpdateSnippet();
-
   const isSaving = createSnippet.isPending || updateSnippet.isPending;
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast({ title: "Title required", description: "Please enter a title for your snippet.", variant: "destructive" });
+      toast({ title: "Title required", variant: "destructive" });
       return;
     }
-
     if (isEditing && snippetId) {
-      await updateSnippet.mutateAsync({
-        id: snippetId,
-        data: { title, code, language, description: description || null },
-      });
+      await updateSnippet.mutateAsync({ id: snippetId, data: { title, code, language, description: description || null } });
       queryClient.invalidateQueries({ queryKey: getGetSnippetQueryKey(snippetId) });
     } else {
-      await createSnippet.mutateAsync({
-        data: { title, code, language, description: description || null },
-      });
+      await createSnippet.mutateAsync({ data: { title, code, language, description: description || null } });
     }
-
     queryClient.invalidateQueries({ queryKey: getListSnippetsQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetSnippetStatsQueryKey() });
     toast({ title: isEditing ? "Snippet updated" : "Snippet saved" });
     setLocation("/snippets");
   };
 
-  const monacoTheme = theme === "dark" ? "vs-dark" : "vs";
+  const fieldStyle = {
+    background: "rgba(6,12,26,0.8)",
+    border: "1px solid rgba(6,182,212,0.15)",
+    color: "#c8d8e8",
+    fontFamily: "var(--app-font-sans)",
+    borderRadius: "0.6rem",
+    outline: "none",
+    transition: "border-color 0.15s ease",
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-card shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
+      <div
+        className="flex items-center gap-3 px-6 py-3.5 shrink-0"
+        style={{ background: "rgba(4,9,20,0.9)", borderBottom: PANEL_BORDER }}
+      >
+        <button
           onClick={() => setLocation("/snippets")}
           data-testid="button-back"
+          className="flex items-center justify-center w-8 h-8 rounded-xl transition-all"
+          style={{ color: "#3a5070", border: "1px solid rgba(6,182,212,0.12)" }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.color = "#06b6d4";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(6,182,212,0.35)";
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.color = "#3a5070";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(6,182,212,0.12)";
+          }}
         >
           <ArrowLeft className="w-4 h-4" />
-        </Button>
+        </button>
 
         <div className="flex items-center gap-2">
-          {isEditing ? (
-            <Save className="w-5 h-5 text-primary" />
-          ) : (
-            <Plus className="w-5 h-5 text-primary" />
-          )}
-          <h1 className="text-lg font-semibold">{isEditing ? "Edit Snippet" : "New Snippet"}</h1>
+          <div
+            className="flex items-center justify-center w-8 h-8 rounded-xl"
+            style={{
+              background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.15))",
+              border: "1px solid rgba(6,182,212,0.35)",
+              boxShadow: "0 0 12px rgba(6,182,212,0.2)",
+            }}
+          >
+            {isEditing ? (
+              <Save className="w-4 h-4" style={{ color: "#06b6d4" }} />
+            ) : (
+              <FilePlus className="w-4 h-4" style={{ color: "#06b6d4" }} />
+            )}
+          </div>
+          <h1
+            className="text-base font-bold"
+            style={{ color: "#e0eaf5", fontFamily: "var(--app-font-sans)" }}
+          >
+            {isEditing ? "Edit Snippet" : "New Snippet"}
+          </h1>
         </div>
 
         <div className="flex-1" />
 
-        <Button
+        <button
           onClick={handleSave}
           disabled={isSaving}
-          size="sm"
-          className="gap-1.5"
           data-testid="button-save-snippet"
+          className="nexus-btn flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl text-white disabled:opacity-40"
         >
           {isSaving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : isEditing ? (
+            <Save className="w-3.5 h-3.5" />
           ) : (
-            <Save className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
           )}
           {isEditing ? "Update" : "Save Snippet"}
-        </Button>
+        </button>
       </div>
 
-      <div className="flex flex-col gap-0 flex-1 overflow-hidden">
-        {/* Metadata */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 py-4 border-b border-border bg-card/50 shrink-0">
-          <div className="md:col-span-2 space-y-1.5">
-            <Label htmlFor="snippet-title" className="text-xs text-muted-foreground">Title</Label>
-            <Input
-              id="snippet-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Snippet title..."
-              className="h-8 text-sm"
-              data-testid="input-snippet-title"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Language</Label>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="h-8 text-sm" data-testid="select-snippet-language">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value} className="text-sm">
-                    {lang.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="md:col-span-3 space-y-1.5">
-            <Label htmlFor="snippet-description" className="text-xs text-muted-foreground">Description (optional)</Label>
-            <Textarea
-              id="snippet-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of what this snippet does..."
-              rows={2}
-              className="text-sm resize-none"
-              data-testid="input-snippet-description"
-            />
-          </div>
-        </div>
-
-        {/* Editor */}
-        <div className="flex-1 overflow-hidden">
-          <Editor
-            height="100%"
-            language={language}
-            value={code}
-            onChange={(v) => setCode(v ?? "")}
-            theme={monacoTheme}
-            options={{
-              fontSize: 14,
-              fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, monospace",
-              fontLigatures: true,
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              lineNumbers: "on",
-              renderLineHighlight: "line",
-              cursorBlinking: "smooth",
-              smoothScrolling: true,
-              padding: { top: 16, bottom: 16 },
-              tabSize: 2,
-              wordWrap: "on",
-              automaticLayout: true,
-            }}
+      {/* Metadata fields */}
+      <div
+        className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 py-4 shrink-0"
+        style={{ background: "rgba(4,9,20,0.6)", borderBottom: PANEL_BORDER }}
+      >
+        {/* Title */}
+        <div className="md:col-span-2 flex flex-col gap-1.5">
+          <label className="text-[11px] font-medium" style={{ color: "#3a5070" }}>
+            Title
+          </label>
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Give your snippet a name..."
+            data-testid="input-snippet-title"
+            className="h-9 px-3 text-sm"
+            style={fieldStyle}
+            onFocus={e => (e.currentTarget.style.borderColor = "rgba(6,182,212,0.5)")}
+            onBlur={e => (e.currentTarget.style.borderColor = "rgba(6,182,212,0.15)")}
           />
         </div>
+
+        {/* Language */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-medium" style={{ color: "#3a5070" }}>
+            Language
+          </label>
+          <Select value={language} onValueChange={setLanguage}>
+            <SelectTrigger
+              className="h-9 text-sm border-[rgba(6,182,212,0.15)] bg-[rgba(6,12,26,0.8)] text-[#c8d8e8]"
+              data-testid="select-snippet-language"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map(lang => (
+                <SelectItem key={lang.value} value={lang.value} className="text-sm">
+                  {lang.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Description */}
+        <div className="md:col-span-3 flex flex-col gap-1.5">
+          <label className="text-[11px] font-medium" style={{ color: "#3a5070" }}>
+            Description <span style={{ color: "#2a3a50" }}>(optional)</span>
+          </label>
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="What does this snippet do?"
+            rows={2}
+            data-testid="input-snippet-description"
+            className="px-3 py-2 text-sm resize-none"
+            style={fieldStyle}
+            onFocus={e => (e.currentTarget.style.borderColor = "rgba(6,182,212,0.5)")}
+            onBlur={e => (e.currentTarget.style.borderColor = "rgba(6,182,212,0.15)")}
+          />
+        </div>
+      </div>
+
+      {/* Monaco Editor */}
+      <div className="flex-1 overflow-hidden" style={{ background: "#050a14" }}>
+        <Editor
+          height="100%"
+          language={language}
+          value={code}
+          onChange={v => setCode(v ?? "")}
+          theme="nexus-dark"
+          options={{
+            fontSize: 14,
+            fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, monospace",
+            fontLigatures: true,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            lineNumbers: "on",
+            renderLineHighlight: "line",
+            cursorBlinking: "smooth",
+            smoothScrolling: true,
+            padding: { top: 20, bottom: 20 },
+            tabSize: 2,
+            wordWrap: "on",
+            automaticLayout: true,
+          }}
+          beforeMount={monaco => {
+            monaco.editor.defineTheme("nexus-dark", {
+              base: "vs-dark",
+              inherit: true,
+              rules: [],
+              colors: {
+                "editor.background": "#050a14",
+                "editor.lineHighlightBackground": "#0a1525",
+                "editorLineNumber.foreground": "#2a4060",
+                "editorLineNumber.activeForeground": "#06b6d4",
+                "editor.selectionBackground": "#06b6d420",
+                "editorCursor.foreground": "#06b6d4",
+                "editor.findMatchBackground": "#06b6d430",
+              },
+            });
+          }}
+        />
       </div>
     </div>
   );
