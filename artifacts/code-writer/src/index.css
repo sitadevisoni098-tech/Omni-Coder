@@ -1,3 +1,4 @@
+@layer theme, base, clerk, components, utilities;
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -40,14 +41,14 @@
   --ring: 270 85% 65%;
   --card: 265 25% 6%;
   --card-foreground: 220 30% 94%;
-  --popover: 265 25% 7%;
+  --popover: 265 28% 7%;
   --popover-foreground: 220 30% 94%;
   --primary: 270 85% 65%;
   --primary-foreground: 0 0% 100%;
   --secondary: 265 20% 12%;
   --secondary-foreground: 220 20% 80%;
   --muted: 265 18% 10%;
-  --muted-foreground: 220 12% 45%;
+  --muted-foreground: 220 12% 55%;
   --accent: 189 94% 52%;
   --accent-foreground: 265 30% 4%;
   --destructive: 0 72% 55%;
@@ -80,234 +81,164 @@
   overflow: hidden;
   pointer-events: none;
 }
-
 .nexus-bg::before {
   content: '';
   position: absolute;
-  width: 900px;
-  height: 900px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.22) 0%, transparent 70%);
-  top: -300px;
-  left: -200px;
+  width: 900px; height: 900px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,0.22) 0%, transparent 70%);
+  top: -300px; left: -200px;
   animation: orb-float-1 18s ease-in-out infinite;
   filter: blur(40px);
 }
-
 .nexus-bg::after {
   content: '';
   position: absolute;
-  width: 700px;
-  height: 700px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, transparent 70%);
-  bottom: -200px;
-  right: -100px;
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(6,182,212,0.18) 0%, transparent 70%);
+  bottom: -200px; right: -100px;
   animation: orb-float-2 22s ease-in-out infinite;
   filter: blur(50px);
 }
-
 .orb-3 {
-  position: absolute;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.14) 0%, transparent 70%);
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: absolute; width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.14) 0%, transparent 70%);
+  top: 40%; left: 50%; transform: translate(-50%, -50%);
   animation: orb-float-3 26s ease-in-out infinite;
-  filter: blur(60px);
-  pointer-events: none;
+  filter: blur(60px); pointer-events: none;
 }
-
 @keyframes orb-float-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(80px, 60px) scale(1.08); }
-  66%       { transform: translate(-40px, 100px) scale(0.95); }
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(80px,60px) scale(1.08); }
+  66%      { transform: translate(-40px,100px) scale(0.95); }
 }
 @keyframes orb-float-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  40%       { transform: translate(-70px, -80px) scale(1.1); }
-  70%       { transform: translate(50px, -40px) scale(0.92); }
+  0%,100% { transform: translate(0,0) scale(1); }
+  40%     { transform: translate(-70px,-80px) scale(1.1); }
+  70%     { transform: translate(50px,-40px) scale(0.92); }
 }
 @keyframes orb-float-3 {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50%       { transform: translate(-50%, -50%) scale(1.15); opacity: 0.7; }
+  0%,100% { transform: translate(-50%,-50%) scale(1); }
+  50%     { transform: translate(-50%,-50%) scale(1.15); opacity: 0.7; }
 }
 
 /* ─── GRID OVERLAY ─────────────────────────────────────────── */
 .nexus-grid {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
     linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-size: 44px 44px;
 }
 
-/* ─── GLASS PANELS ─────────────────────────────────────────── */
+/* ─── GLASS ─────────────────────────────────────────────────── */
 .glass-panel {
-  background: rgba(12, 4, 28, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(124, 58, 237, 0.18);
-}
-
-.glass-panel-cyan {
-  background: rgba(4, 12, 22, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(6, 182, 212, 0.18);
+  background: rgba(10,2,24,0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(124,58,237,0.18);
 }
 
 /* ─── GRADIENT TEXT ────────────────────────────────────────── */
-.gradient-text-purple {
-  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 40%, #06b6d4 100%);
+.gradient-text {
+  background: linear-gradient(135deg, #c4b5fd 0%, #818cf8 40%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-text-gold {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #06b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.gradient-text-cyan {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 60%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ─── NEXUS BUTTONS ────────────────────────────────────────── */
+/* ─── NEXUS BUTTON ─────────────────────────────────────────── */
 .btn-nexus {
   background: linear-gradient(135deg, #7c3aed, #3b82f6, #06b6d4);
   background-size: 200% 200%;
   animation: btn-shimmer 4s ease infinite;
-  box-shadow: 0 0 20px rgba(124,58,237,0.5), 0 4px 16px rgba(0,0,0,0.4);
-  color: white;
-  font-weight: 600;
-  border: none;
+  box-shadow: 0 0 24px rgba(124,58,237,0.55), 0 4px 16px rgba(0,0,0,0.4);
+  color: white; font-weight: 700; border: none;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   cursor: pointer;
 }
-.btn-nexus:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 0 32px rgba(124,58,237,0.7), 0 8px 24px rgba(0,0,0,0.4);
-}
+.btn-nexus:hover { transform: translateY(-1px); box-shadow: 0 0 36px rgba(124,58,237,0.8), 0 8px 24px rgba(0,0,0,0.4); }
 .btn-nexus:active { transform: translateY(0); }
-.btn-nexus:disabled { opacity: 0.35; transform: none; cursor: not-allowed; }
-
+.btn-nexus:disabled { opacity: 0.35; transform: none; cursor: not-allowed; animation: none; }
 @keyframes btn-shimmer {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* ─── NAV ACTIVE STATE ─────────────────────────────────────── */
-.nav-item-active {
-  background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(6,182,212,0.12));
-  border: 1px solid rgba(124,58,237,0.5);
-  box-shadow: 0 0 16px rgba(124,58,237,0.25), inset 0 0 16px rgba(124,58,237,0.06);
-  color: #a78bfa;
-}
-
-/* ─── ACTION PILLS ─────────────────────────────────────────── */
-.action-pill {
-  background: rgba(124,58,237,0.1);
-  border: 1px solid rgba(124,58,237,0.25);
-  color: #a78bfa;
-  font-size: 11px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-  font-family: var(--app-font-sans);
-}
-.action-pill:hover {
-  background: rgba(124,58,237,0.22);
-  border-color: rgba(124,58,237,0.6);
-  box-shadow: 0 0 12px rgba(124,58,237,0.3);
-  color: #c4b5fd;
-}
-
-/* ─── CODE BLOCK ───────────────────────────────────────────── */
-.nexus-code-block {
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(124,58,237,0.2);
-  border-radius: 10px;
-  overflow: hidden;
-  margin: 10px 0;
-  font-family: var(--app-font-mono);
-}
-.nexus-code-block pre {
-  padding: 14px 16px;
-  margin: 0;
-  font-size: 12.5px;
-  color: #c4d4f0;
-  overflow-x: auto;
-  line-height: 1.6;
-}
-
-/* ─── SNIPPET CARDS ────────────────────────────────────────── */
-.snippet-card {
-  background: rgba(10, 4, 24, 0.8);
-  border: 1px solid rgba(124,58,237,0.12);
-  border-radius: 16px;
-  overflow: hidden;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(12px);
-}
-.snippet-card:hover {
-  border-color: rgba(124,58,237,0.45);
-  box-shadow: 0 0 28px rgba(124,58,237,0.18), 0 8px 32px rgba(0,0,0,0.5);
-  transform: translateY(-2px);
-}
-
 /* ─── GLOW INPUT ───────────────────────────────────────────── */
 .glow-input {
-  background: rgba(8, 2, 20, 0.8);
-  border: 1px solid rgba(124,58,237,0.2);
-  color: #e0d8ff;
-  font-family: var(--app-font-sans);
-  transition: all 0.15s ease;
-  outline: none;
+  background: rgba(8,2,20,0.85);
+  border: 1px solid rgba(124,58,237,0.22);
+  color: #e0d8ff; transition: all 0.15s ease; outline: none;
 }
 .glow-input:focus {
-  border-color: rgba(124,58,237,0.6);
-  box-shadow: 0 0 0 2px rgba(124,58,237,0.15), 0 0 16px rgba(124,58,237,0.1);
+  border-color: rgba(124,58,237,0.65);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.12), 0 0 20px rgba(124,58,237,0.1);
 }
-.glow-input::placeholder {
-  color: rgba(160,140,220,0.35);
+.glow-input::placeholder { color: rgba(167,139,250,0.3); }
+
+/* ─── CHAT BUBBLES ─────────────────────────────────────────── */
+.bubble-user {
+  background: linear-gradient(135deg, rgba(124,58,237,0.28), rgba(59,130,246,0.2));
+  border: 1px solid rgba(124,58,237,0.45);
+  box-shadow: 0 2px 16px rgba(124,58,237,0.18);
+  color: #ede8ff;
+}
+.bubble-ai {
+  background: rgba(10,3,26,0.75);
+  border: 1px solid rgba(124,58,237,0.14);
+  color: #d4ccf0;
+}
+
+/* ─── SHIMMER LINE ─────────────────────────────────────────── */
+.shimmer-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124,58,237,0.7) 30%, rgba(6,182,212,0.7) 70%, transparent);
 }
 
 /* ─── SCROLLBAR ────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.3); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.55); }
 
-/* ─── LANGUAGE BADGES ──────────────────────────────────────── */
-.lang-badge {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-family: var(--app-font-mono);
-  border: 1px solid;
+/* ─── SIDEBAR ITEM ─────────────────────────────────────────── */
+.sidebar-item {
+  padding: 9px 12px; border-radius: 10px; cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  color: #5a4a82;
+}
+.sidebar-item:hover { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.2); color: #a78bfa; }
+.sidebar-item.active {
+  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.08));
+  border-color: rgba(124,58,237,0.45);
+  color: #c4b5fd;
+  box-shadow: 0 0 12px rgba(124,58,237,0.18);
 }
 
-/* ─── MISC ─────────────────────────────────────────────────── */
-.border-purple-glow  { border-color: rgba(124,58,237,0.35); }
-.border-cyan-glow    { border-color: rgba(6,182,212,0.35); }
-.glow-purple-soft    { box-shadow: 0 0 20px rgba(124,58,237,0.2); }
-.glow-cyan-soft      { box-shadow: 0 0 20px rgba(6,182,212,0.2); }
-
-.shimmer-line {
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(124,58,237,0.7) 30%, rgba(6,182,212,0.7) 70%, transparent 100%);
+/* ─── THINKING DOTS ────────────────────────────────────────── */
+@keyframes thinking-dot {
+  0%,80%,100% { transform: translateY(0); opacity: 0.4; }
+  40%          { transform: translateY(-7px); opacity: 1; }
 }
 
-/* Popover/dropdown fix */
-[data-radix-popper-content-wrapper] {
-  z-index: 9999 !important;
+/* ─── CODE BLOCK ───────────────────────────────────────────── */
+.code-block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 14px;
+  background: rgba(124,58,237,0.07);
+  border-bottom: 1px solid rgba(124,58,237,0.14);
 }
+
+/* ─── CLERK OVERRIDES ──────────────────────────────────────── */
+.cl-formFieldInput::placeholder { color: rgba(167,139,250,0.35); opacity: 1; }
+
+/* ─── POPOVER FIX ──────────────────────────────────────────── */
+[data-radix-popper-content-wrapper] { z-index: 9999 !important; }
