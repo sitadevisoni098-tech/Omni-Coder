@@ -10,7 +10,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, Send, Loader2, Bot, LogOut,
-  Sparkles, Zap, MessageSquare, Menu, X, Copy, Check,
+  Sparkles, Zap, MessageSquare, Menu, X, Copy, Check, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -92,7 +92,8 @@ export default function ChatPage() {
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // always closed initially — safe for both mobile and desktop
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -173,11 +174,33 @@ export default function ChatPage() {
     if (conversationId === id) startNew();
   };
 
-  const selectConv = (id: number) => {
+  const selectConv = useCallback(async (id: number) => {
+    if (id === conversationId) {
+      if (isMobile) setSidebarOpen(false);
+      return;
+    }
     setConversationId(id);
     setMessages([]);
     if (isMobile) setSidebarOpen(false);
-  };
+    setIsLoadingHistory(true);
+    try {
+      const res = await fetch(`/api/openai/conversations/${id}`);
+      if (!res.ok) throw new Error("Failed to load");
+      const data = await res.json();
+      const msgs: Message[] = (data.messages ?? [])
+        .filter((m: { role: string }) => m.role === "user" || m.role === "assistant")
+        .map((m: { id: number; role: string; content: string }) => ({
+          id: String(m.id),
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
+      setMessages(msgs);
+    } catch {
+      toast({ title: "Couldn't load conversation history", variant: "destructive" });
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, [conversationId, isMobile, toast]);
 
   const displayName = user?.firstName || user?.username || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "User";
   const avatarUrl = user?.imageUrl;
@@ -255,26 +278,42 @@ export default function ChatPage() {
           {/* Conversations list */}
           <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
             {conversations.length === 0 ? (
-              <p className="text-xs text-center mt-4" style={{ color: "#2a1a40" }}>No conversations yet</p>
+              <div className="flex flex-col items-center gap-2 mt-8">
+                <MessageSquare className="w-8 h-8 opacity-20" style={{ color: "#7c3aed" }} />
+                <p className="text-xs text-center" style={{ color: "#2a1a40" }}>No conversations yet.<br />Start chatting to build your history.</p>
+              </div>
             ) : (
-              conversations.map(conv => (
-                <div
-                  key={conv.id}
-                  onClick={() => selectConv(conv.id)}
-                  className={cn("sidebar-item group flex items-center gap-2", conversationId === conv.id && "active")}
-                  style={{ minHeight: "44px", padding: "10px 10px" }}
-                >
-                  <MessageSquare className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  <span className="text-xs truncate flex-1">{conv.title}</span>
-                  <button
-                    onClick={e => { e.stopPropagation(); handleDelete(conv.id); }}
-                    className="p-1.5 rounded transition-all text-red-400 opacity-0 group-hover:opacity-100 active:opacity-100"
-                    style={{ touchAction: "manipulation" }}
+              conversations.map(conv => {
+                const date = conv.createdAt ? new Date(conv.createdAt) : null;
+                const timeLabel = date
+                  ? (Date.now() - date.getTime() < 86400000
+                    ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                    : date.toLocaleDateString([], { month: "short", day: "numeric" }))
+                  : null;
+                return (
+                  <div
+                    key={conv.id}
+                    onClick={() => selectConv(conv.id)}
+                    className={cn("sidebar-item group flex items-start gap-2", conversationId === conv.id && "active")}
+                    style={{ minHeight: "48px", padding: "10px 10px" }}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))
+                    <MessageSquare className="w-3.5 h-3.5 shrink-0 opacity-60 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs truncate leading-snug">{conv.title}</p>
+                      {timeLabel && (
+                        <p className="text-[10px] mt-0.5" style={{ color: "#3a2a5a" }}>{timeLabel}</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); handleDelete(conv.id); }}
+                      className="p-1.5 rounded transition-all text-red-400 opacity-0 group-hover:opacity-100 active:opacity-100 shrink-0"
+                      style={{ touchAction: "manipulation" }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })
             )}
           </div>
 
@@ -362,8 +401,18 @@ export default function ChatPage() {
         <div className="flex-1 overflow-y-auto" style={{ padding: "20px 0", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
           <div className="max-w-3xl mx-auto px-4 space-y-5">
 
+            {/* Loading history state */}
+            {isLoadingHistory && (
+              <div className="flex flex-col items-center justify-center gap-3 pt-16">
+                <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl" style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)" }}>
+                  <Clock className="w-4 h-4 animate-pulse" style={{ color: "#a78bfa" }} />
+                  <span className="text-sm" style={{ color: "#7c6aaa" }}>Loading conversation history…</span>
+                </div>
+              </div>
+            )}
+
             {/* Empty state */}
-            {messages.length === 0 && (
+            {messages.length === 0 && !isLoadingHistory && (
               <div className="flex flex-col items-center text-center gap-5 pt-8">
                 <div
                   className="relative flex items-center justify-center w-20 h-20 rounded-3xl"
